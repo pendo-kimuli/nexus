@@ -25,7 +25,7 @@ new Chart(document.getElementById('registrationsChart'), {
         labels: {!! json_encode($registrationsByMonth->keys()) !!},
         datasets: [{ label: 'New Users', data: {!! json_encode($registrationsByMonth->values()) !!}, backgroundColor: '#0b3d91' }]
     },
-    options: { responsive: true, scales: { y: { beginAtZero: true } } }
+  options: { responsive: true, scales: { y: { beginAtZero: true, ticks: { stepSize: 1 } } } }
 });
 </script>
 @endsection

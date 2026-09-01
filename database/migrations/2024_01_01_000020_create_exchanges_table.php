@@ -15,7 +15,8 @@ return new class extends Migration
             $table->foreignId('value_declaration_id')->nullable()->constrained('value_declarations')->onDelete('set null');
             $table->string('title');
             $table->text('contract_terms');
-            $table->string('status')->default('active');
+            $table->string('status')->default('pending');
+            $table->text('dispute_reason')->nullable();
             $table->timestamps();
         });
     }

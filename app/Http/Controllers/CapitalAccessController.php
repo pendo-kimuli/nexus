@@ -7,6 +7,7 @@ use App\Services\DarajaService;
 use App\Services\SmsService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class CapitalAccessController extends Controller
 {
@@ -39,7 +40,7 @@ class CapitalAccessController extends Controller
     public function index()
     {
         abort_unless(Auth::user()->isAdmin(), 403);
-        $applications = CapitalAccess::with('user')->latest()->get();
+        $applications = CapitalAccess::with(['user', 'interests'])->latest()->get();
         return view('capital.index', compact('applications'));
     }
 
@@ -48,7 +49,21 @@ class CapitalAccessController extends Controller
         abort_unless(Auth::user()->isAdmin(), 403);
         $capitalAccess->status = 'approved';
         $capitalAccess->save();
+
+        (new SmsService())->send($capitalAccess->user, "NEXUS: Your application for KES {$capitalAccess->amount_requested} has been approved and is pending disbursement.");
+
         return back()->with('status', 'Application approved.');
+    }
+
+    public function reject(CapitalAccess $capitalAccess)
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+        $capitalAccess->status = 'rejected';
+        $capitalAccess->save();
+
+        (new SmsService())->send($capitalAccess->user, "NEXUS: Your application for KES {$capitalAccess->amount_requested} was not approved at this time.");
+
+        return back()->with('status', 'Application rejected.');
     }
 
     public function disburse(CapitalAccess $capitalAccess, DarajaService $daraja)
@@ -69,5 +84,23 @@ class CapitalAccessController extends Controller
         }
 
         return back()->with('status', 'Disbursement failed. Check logs.');
+    }
+
+    public function darajaCallback(Request $request)
+    {
+        Log::info('Daraja callback received: ' . json_encode($request->all()));
+
+        $conversationId = $request->input('Result.ConversationID') ?? $request->input('ConversationID');
+
+        if ($conversationId) {
+            $capitalAccess = CapitalAccess::where('daraja_transaction_id', $conversationId)->first();
+            if ($capitalAccess) {
+                $resultCode = $request->input('Result.ResultCode');
+                $capitalAccess->status = (in_array($resultCode, [0, '0'], true)) ? 'disbursed' : 'approved';
+                $capitalAccess->save();
+            }
+        }
+
+        return response()->json(['ResultCode' => 0, 'ResultDesc' => 'Accepted']);
     }
 }

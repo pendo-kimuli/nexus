@@ -25,4 +25,20 @@ class AdminController extends Controller
 
         return view('admin.dashboard', compact('stats', 'registrationsByMonth'));
     }
+
+    public function users()
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+        $users = User::with('trustScore')->latest()->get();
+        return view('admin.users', compact('users'));
+    }
+
+    public function toggleUserActive(User $user)
+    {
+        abort_unless(Auth::user()->isAdmin(), 403);
+        $user->is_active = !$user->is_active;
+        $user->save();
+
+        return back()->with('status', $user->is_active ? 'User reactivated.' : 'User suspended.');
+    }
 }
