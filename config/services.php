@@ -34,5 +34,19 @@ return [
             'channel' => env('SLACK_BOT_USER_DEFAULT_CHANNEL'),
         ],
     ],
+        'africastalking' => [
+        'username' => env('AT_USERNAME'),
+        'api_key' => env('AT_API_KEY'),
+    ],
+
+    'daraja' => [
+        'consumer_key' => env('DARAJA_CONSUMER_KEY'),
+        'consumer_secret' => env('DARAJA_CONSUMER_SECRET'),
+        'shortcode' => env('DARAJA_SHORTCODE'),
+        'initiator_name' => env('DARAJA_INITIATOR_NAME'),
+        'security_credential' => env('DARAJA_SECURITY_CREDENTIAL'),
+        'timeout_url' => env('DARAJA_TIMEOUT_URL'),
+        'result_url' => env('DARAJA_RESULT_URL'),
+    ],
 
 ];

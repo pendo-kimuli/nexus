@@ -2,48 +2,38 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
 class User extends Authenticatable
 {
-    /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 
-    /**
-     * The attributes that are mass assignable.
-     *
-     * @var list<string>
-     */
     protected $fillable = [
-        'name',
-        'email',
-        'password',
+        'name', 'email', 'phone_number', 'role', 'is_active', 'password',
     ];
 
-    /**
-     * The attributes that should be hidden for serialization.
-     *
-     * @var list<string>
-     */
     protected $hidden = [
-        'password',
-        'remember_token',
+        'password', 'remember_token',
     ];
 
-    /**
-     * Get the attributes that should be cast.
-     *
-     * @return array<string, string>
-     */
     protected function casts(): array
     {
         return [
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
+            'is_active' => 'boolean',
         ];
     }
+
+    public function valueDeclarations() { return $this->hasMany(ValueDeclaration::class); }
+    public function trustScore() { return $this->hasOne(TrustScore::class); }
+    public function exchangesAsInitiator() { return $this->hasMany(Exchange::class, 'initiator_id'); }
+    public function exchangesAsCounterpart() { return $this->hasMany(Exchange::class, 'counterpart_id'); }
+    public function capitalAccessApplications() { return $this->hasMany(CapitalAccess::class); }
+
+    public function isIndividual(): bool { return $this->role === 'individual'; }
+    public function isInvestor(): bool { return $this->role === 'investor'; }
+    public function isAdmin(): bool { return $this->role === 'admin'; }
 }
